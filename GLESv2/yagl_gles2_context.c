@@ -1,3 +1,36 @@
+/*
+ * YaGL
+ *
+ * Copyright (c) 2012 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact :
+ * Stanislav Vorobiov <s.vorobiov@samsung.com>
+ * Jinhyung Jo <jinhyung.jo@samsung.com>
+ * YeongKyoon Lee <yeongkyoon.lee@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Contributors:
+ * - S-Core Co., Ltd
+ *
+ */
+
 #include "GLES2/gl2.h"
 #include "GLES2/gl2ext.h"
 #include "yagl_gles2_context.h"
@@ -47,16 +80,15 @@ static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
 static const GLchar *texture_3d_ext = "GL_OES_texture_3D";
 static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
-static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
 static const GLchar *pack_subimage_ext = "GL_NV_pack_subimage";
 static const GLchar *unpack_subimage_ext = "GL_EXT_unpack_subimage";
+static const GLchar *surfaceless_context_ext = "GL_OES_surfaceless_context";
 static const GLchar *egl_sync_ext = "GL_OES_EGL_sync";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
-static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
 static const GLchar *vertex_array_object_ext = "GL_OES_vertex_array_object";
 static const GLchar *texture_half_float_ext = "GL_OES_texture_half_float";
@@ -324,12 +356,12 @@ const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
     extensions[i++] = element_index_uint_ext;
     extensions[i++] = texture_3d_ext;
     extensions[i++] = blend_minmax_ext;
-    extensions[i++] = texture_storage_ext;
     extensions[i++] = pbo_ext;
     extensions[i++] = read_buffer_ext;
     extensions[i++] = compressed_etc1_rgb8_texture_ext;
     extensions[i++] = pack_subimage_ext;
     extensions[i++] = unpack_subimage_ext;
+    extensions[i++] = surfaceless_context_ext;
 
     if (yagl_egl_fence_supported()) {
         extensions[i++] = egl_sync_ext;
@@ -341,10 +373,6 @@ const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;
-    }
-
-    if (ctx->base.texture_rectangle) {
-        extensions[i++] = texture_rectangle_ext;
     }
 
     if (ctx->base.texture_filter_anisotropic) {

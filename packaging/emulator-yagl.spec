@@ -2,7 +2,7 @@
 
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
-Version:    1.2
+Version:    1.4
 Release:    1
 License:    MIT
 #URL:        http://www.khronos.org
@@ -25,6 +25,7 @@ BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif
+Provides:   opengl-es-drv
 
 %description
 YaGL - OpenGLES acceleration module for emulator.
@@ -32,6 +33,7 @@ This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
 
 %package devel
 Summary:    YaGL - OpenGLES acceleration module for emulator (devel)
+Provides:   opengl-es-drv-devel
 Requires:   %{name} = %{version}-%{release}
 Requires: pkgconfig(x11)
 
@@ -46,11 +48,7 @@ cp %{SOURCE1001} .
 %if %{with wayland}
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
 %else
-%if 0%{?wearable_build}
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DDUMMY_LIBS=1 -DENABLE_WEARABLE=1
-%else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DDUMMY_LIBS=1
-%endif
 %endif
 make
 
@@ -71,14 +69,11 @@ ln -s libGLESv1_CM.so.1 %{buildroot}%{_libdir}/libGLESv1_CM.so
 ln -s yagl/libGLESv2.so.1.0 %{buildroot}%{_libdir}/libGLESv2.so.1
 ln -s libGLESv2.so.1 %{buildroot}%{_libdir}/libGLESv2.so
 
-mkdir -p %{buildroot}/usr/lib/systemd/system
-cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
-
-mkdir -p %{buildroot}/usr/lib/systemd/system/emulator_preinit.target.wants
-ln -s ../emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system/emulator_preinit.target.wants/emul-opengl-yagl.service
-
 mkdir -p %{buildroot}/etc/emulator
-cp packaging/yagl.sh %{buildroot}/etc/emulator
+cp packaging/opengl-es-setup-yagl-env.sh %{buildroot}/etc/emulator
+
+mkdir -p %{buildroot}/usr/share/license
+cp COPYING %{buildroot}/usr/share/license/%{name}
 %endif
 
 mkdir -p %{buildroot}/usr/include
@@ -106,9 +101,8 @@ cp pkgconfig/* %{buildroot}/usr/lib/pkgconfig/
 /usr/lib/libGLES*
 /usr/lib/yagl/*
 /usr/lib/dummy-gl/*
-/usr/lib/systemd/system/emul-opengl-yagl.service
-/usr/lib/systemd/system/emulator_preinit.target.wants/emul-opengl-yagl.service
-%attr(777,root,root)/etc/emulator/yagl.sh
+%attr(777,root,root)/etc/emulator/opengl-es-setup-yagl-env.sh
+/usr/share/license/%{name}
 %endif
 
 %files devel

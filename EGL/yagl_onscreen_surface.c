@@ -1,3 +1,36 @@
+/*
+ * YaGL
+ *
+ * Copyright (c) 2012 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact :
+ * Stanislav Vorobiov <s.vorobiov@samsung.com>
+ * Jinhyung Jo <jinhyung.jo@samsung.com>
+ * YeongKyoon Lee <yeongkyoon.lee@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Contributors:
+ * - S-Core Co., Ltd
+ *
+ */
+
 #include "yagl_onscreen_surface.h"
 #include "yagl_onscreen_utils.h"
 #include "yagl_host_egl_calls.h"
@@ -29,17 +62,11 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     struct vigs_drm_surface *new_drm_sfc;
 
-#if defined(TIZEN_WEARABLE)
-    if (sfc->type != EGL_WINDOW_BIT) {
-        return;
-    }
-#else
     if (osfc->last_stamp == drawable->stamp) {
         return;
     }
 
     assert(sfc->type == EGL_WINDOW_BIT);
-#endif
 
     osfc->last_stamp = drawable->stamp;
 
