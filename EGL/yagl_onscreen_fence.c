@@ -1,0 +1,127 @@
+/*
+ * YaGL
+ *
+ * Copyright (c) 2012 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact :
+ * Stanislav Vorobiov <s.vorobiov@samsung.com>
+ * Jinhyung Jo <jinhyung.jo@samsung.com>
+ * YeongKyoon Lee <yeongkyoon.lee@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Contributors:
+ * - S-Core Co., Ltd
+ *
+ */
+
+#include "yagl_onscreen_fence.h"
+#include "yagl_log.h"
+#include "yagl_malloc.h"
+#include "yagl_display.h"
+#include "yagl_native_display.h"
+#include "vigs.h"
+#include <string.h>
+
+static int yagl_onscreen_fence_wait(struct yagl_egl_fence *egl_fence)
+{
+    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)egl_fence;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(eglClientWaitSyncKHR);
+
+    ret = vigs_drm_fence_wait(ofence->drm_fence);
+
+    if (ret == 0) {
+        ofence->signaled = 1;
+    } else {
+        YAGL_LOG_ERROR("vigs_drm_fence_wait failed: %s",
+                       strerror(-ret));
+    }
+
+    return (ret == 0);
+}
+
+static int yagl_onscreen_fence_signaled(struct yagl_egl_fence *egl_fence)
+{
+    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)egl_fence;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(eglGetSyncAttribKHR);
+
+    if (ofence->signaled) {
+        return 1;
+    }
+
+    ret = vigs_drm_fence_check(ofence->drm_fence);
+
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_fence_check failed: %s",
+                       strerror(-ret));
+    }
+
+    ofence->signaled = ofence->drm_fence->signaled;
+
+    return ofence->signaled;
+}
+
+static void yagl_onscreen_fence_destroy(struct yagl_ref *ref)
+{
+    struct yagl_onscreen_fence *fence = (struct yagl_onscreen_fence*)ref;
+
+    vigs_drm_fence_unref(fence->drm_fence);
+
+    yagl_fence_cleanup(&fence->base);
+
+    yagl_free(fence);
+}
+
+struct yagl_onscreen_fence
+    *yagl_onscreen_fence_create(struct yagl_display *dpy)
+{
+    struct yagl_onscreen_fence *fence;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(eglCreateSyncKHR);
+
+    fence = yagl_malloc0(sizeof(*fence));
+
+    ret = vigs_drm_fence_create(dpy->native_dpy->drm_dev, 0, &fence->drm_fence);
+
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_fence_create failed: %s",
+                       strerror(-ret));
+        goto fail;
+    }
+
+    yagl_fence_init(&fence->base,
+                    &yagl_onscreen_fence_destroy,
+                    dpy,
+                    fence->drm_fence->seq);
+
+    fence->base.base.wait = &yagl_onscreen_fence_wait;
+    fence->base.base.signaled = &yagl_onscreen_fence_signaled;
+
+    return fence;
+
+fail:
+    yagl_free(fence);
+
+    return NULL;
+}
