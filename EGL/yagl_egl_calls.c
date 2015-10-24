@@ -1396,6 +1396,8 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         goto out;
     }
 
+    res = EGL_TRUE;
+
     switch (attribute) {
     case EGL_CONTEXT_CLIENT_TYPE:
         switch (ctx->client_ctx->client_api) {
@@ -1628,8 +1630,12 @@ out:
     return res;
 }
 
+#ifndef EGL_NATIVE_SURFACE_TIZEN
+#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+#endif
+
 YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
-                                       EGLContext ctx,
+                                       EGLContext ctx_,
                                        EGLenum target,
                                        EGLClientBuffer buffer,
                                        const EGLint *attrib_list)
@@ -1637,6 +1643,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
     EGLImageKHR ret = EGL_NO_IMAGE_KHR;
     struct yagl_client_interface *iface = NULL;
     struct yagl_display *dpy = NULL;
+    struct yagl_context *ctx = NULL;
     struct yagl_native_drawable *native_buffer = NULL;
     struct yagl_image *image = NULL;
     int i = 0;
@@ -1644,7 +1651,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
                         "dpy = %u, ctx = %u, target = %u, buffer = %p",
                         (yagl_host_handle)dpy_,
-                        (yagl_host_handle)ctx,
+                        (yagl_host_handle)ctx_,
                         target,
                         buffer);
 
@@ -1732,6 +1739,60 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
         }
 
         break;
+    case EGL_GL_TEXTURE_2D_KHR:
+        if (attrib_list) {
+            while (attrib_list[i] != EGL_NONE) {
+                switch (attrib_list[i]) {
+                case EGL_IMAGE_PRESERVED_KHR:
+                case EGL_GL_TEXTURE_LEVEL_KHR:
+                    break;
+                default:
+                    YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                    goto out;
+                }
+
+                i += 2;
+            }
+        }
+
+        if (!yagl_validate_context(dpy, ctx_, &ctx)) {
+            goto out;
+        }
+
+        image = yagl_get_backend()->create_image_gl_texture_2d(dpy,
+                                                               ctx,
+                                                               (yagl_object_name)buffer,
+                                                               iface);
+
+        if (!image) {
+            goto out;
+        }
+
+        break;
+    case EGL_NATIVE_SURFACE_TIZEN:
+        if (attrib_list) {
+            while (attrib_list[i] != EGL_NONE) {
+                switch (attrib_list[i]) {
+                case EGL_IMAGE_PRESERVED_KHR:
+                    break;
+                default:
+                    YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                    goto out;
+                }
+
+                i += 2;
+            }
+        }
+
+        image = yagl_get_backend()->create_image_tizen_sfc(dpy,
+                                                           buffer,
+                                                           iface);
+
+        if (!image) {
+            goto out;
+        }
+
+        break;
     default:
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
@@ -1746,6 +1807,8 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
 
 out:
     yagl_image_release(image);
+
+    yagl_context_release(ctx);
 
     YAGL_LOG_FUNC_EXIT("%p", ret);
 

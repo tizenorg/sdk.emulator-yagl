@@ -60,6 +60,14 @@ static struct yagl_client_image
     return &yagl_gles_image_create(tex_global_name)->base;
 }
 
+static struct yagl_client_image
+    *yagl_gles2_wrap_texture(struct yagl_client_interface *iface,
+                             struct yagl_client_context *ctx,
+                             yagl_object_name tex_local_name)
+{
+    return &yagl_gles_image_wrap_tex(ctx, tex_local_name)->base;
+}
+
 static void yagl_gles2_release_tex_image(struct yagl_client_interface *iface,
                                          void *cookie)
 {
@@ -72,5 +80,6 @@ YAGL_API struct yagl_client_interface yagl_gles2_interface =
 {
     .create_ctx = &yagl_gles2_create_ctx,
     .create_image = &yagl_gles2_create_image,
+    .wrap_texture = &yagl_gles2_wrap_texture,
     .release_tex_image = &yagl_gles2_release_tex_image
 };

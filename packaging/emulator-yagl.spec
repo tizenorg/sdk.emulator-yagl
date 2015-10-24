@@ -3,7 +3,7 @@
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.4
-Release:    2
+Release:    5
 License:    MIT and LPGL-3.0
 #URL:        http://www.khronos.org
 ExclusiveArch:    %{ix86}
@@ -11,6 +11,7 @@ Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(libdrm)
+BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  flex
 BuildRequires:  bison
 %if %{with wayland}
@@ -22,9 +23,12 @@ BuildRequires:  pkgconfig(wayland-server)
 BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
+BuildRequires:  pkgconfig(xshmfence)
+BuildRequires:  pkgconfig(xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif
+Requires:   libtbm
 Provides:   opengl-es-drv
 
 %description
@@ -69,9 +73,6 @@ ln -s libGLESv1_CM.so.1 %{buildroot}%{_libdir}/libGLESv1_CM.so
 ln -s yagl/libGLESv2.so.1.0 %{buildroot}%{_libdir}/libGLESv2.so.1
 ln -s libGLESv2.so.1 %{buildroot}%{_libdir}/libGLESv2.so
 
-mkdir -p %{buildroot}/etc/emulator
-cp packaging/opengl-es-setup-yagl-env.sh %{buildroot}/etc/emulator
-
 mkdir -p %{buildroot}/usr/share/license
 cp COPYING %{buildroot}/usr/share/license/%{name}
 %endif
@@ -101,7 +102,6 @@ cp pkgconfig/* %{buildroot}/usr/lib/pkgconfig/
 /usr/lib/libGLES*
 /usr/lib/yagl/*
 /usr/lib/dummy-gl/*
-%attr(777,root,root)/etc/emulator/opengl-es-setup-yagl-env.sh
 /usr/share/license/%{name}
 %endif
 

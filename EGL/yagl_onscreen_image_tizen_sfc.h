@@ -4,7 +4,7 @@
  * Copyright (c) 2012 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Contact :
- * Stanislav Vorobiov <s.vorobiov@samsung.com>
+ * Vasily Ulyanov <v.ulyanov@samsung.com>
  * Jinhyung Jo <jinhyung.jo@samsung.com>
  * YeongKyoon Lee <yeongkyoon.lee@samsung.com>
  *
@@ -31,32 +31,25 @@
  *
  */
 
-#ifndef _YAGL_CLIENT_INTERFACE_H_
-#define _YAGL_CLIENT_INTERFACE_H_
+#ifndef _YAGL_ONSCREEN_IMAGE_TIZEN_SFC_H_
+#define _YAGL_ONSCREEN_IMAGE_TIZEN_SFC_H_
 
-#include "yagl_types.h"
+#include "yagl_image.h"
+#include "EGL/egl.h"
 
-struct yagl_client_context;
-struct yagl_client_image;
-struct yagl_sharegroup;
+struct yagl_client_interface;
+struct vigs_drm_surface;
 
-struct yagl_client_interface
+struct yagl_onscreen_image_tizen_sfc
 {
-    struct yagl_client_context *(*create_ctx)(struct yagl_client_interface */*iface*/,
-                                              yagl_client_api /*client_api*/,
-                                              struct yagl_sharegroup */*sg*/);
+    struct yagl_image base;
 
-    struct yagl_client_image
-        *(*create_image)(struct yagl_client_interface */*iface*/,
-                         yagl_object_name /*tex_global_name*/);
-
-    struct yagl_client_image
-        *(*wrap_texture)(struct yagl_client_interface */*iface*/,
-                         struct yagl_client_context */*ctx*/,
-                         yagl_object_name /*tex_local_name*/);
-
-    void (*release_tex_image)(struct yagl_client_interface */*iface*/,
-                              void */*cookie*/);
+    struct vigs_drm_surface *drm_sfc;
 };
+
+struct yagl_onscreen_image_tizen_sfc
+    *yagl_onscreen_image_tizen_sfc_create(struct yagl_display *dpy,
+                                          EGLClientBuffer buffer,
+                                          struct yagl_client_interface *iface);
 
 #endif
